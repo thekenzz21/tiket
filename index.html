@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Beranda - Travelin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Cek status login
+      if (localStorage.getItem("isLoggedIn") !== "true") {
+        window.location.href = "login.html";
+      }
+    </script>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+      }
+      .hover-scale:hover {
+        transform: scale(1.03);
+        transition: all 0.3s ease;
+      }
+      header.py-5 {
+        background-image: url("trr.jpg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        height: 60vh;
+        padding: 100px 0;
+        color: white;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+      }
+      /* Loader overlay */
+      #loadingOverlay {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(255,255,255,0.7);
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Loader -->
+    <div id="loadingOverlay">
+      <div class="spinner-border text-primary" style="width:4rem;height:4rem;" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+      <div class="container">
+        <img
+          src="tike.png"
+          alt="Logo KAI"
+          width="40"
+          height="40"
+          class="me-2"
+        />
+        <a class="navbar-brand" href="#">Travelin</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="index.html">Beranda</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="meki.html">Cari Tiket</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="pesan.html">Pesanan Saya</a>
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-outline-danger ms-3" onclick="logout()">
+                Logout
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <header class="py-5 text-white text-center">
+      <div class="container">
+        <h1>Selamat Datang di Travelin</h1>
+        <p class="lead">
+          Platform pencarian tiket kereta api termudah dan terpercaya
+        </p>
+        <a href="#" id="btnCariTiket" class="btn btn-light mt-3 px-4 py-2">
+          Cari Tiket Sekarang
+        </a>
+      </div>
+    </header>
+
+    <main class="container my-5">
+      <section class="text-center mb-5">
+        <h2 class="mb-3">Kenapa Pilih Travelin?</h2>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-scale">
+              <div class="card-body">
+                <h5 class="card-title">Cepat & Mudah</h5>
+                <p class="card-text">
+                  Antarmuka simpel, hasil pencarian instan, tanpa ribet.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-scale">
+              <div class="card-body">
+                <h5 class="card-title">Harga Transparan</h5>
+                <p class="card-text">
+                  Tanpa biaya tersembunyi, semua harga yang kamu lihat adalah
+                  harga final.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-scale">
+              <div class="card-body">
+                <h5 class="card-title">Jangkauan Luas</h5>
+                <p class="card-text">
+                  Terhubung ke ratusan kota di seluruh Indonesia lewat satu
+                  platform.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="text-center">
+        <h2 class="mb-4">Mulai Petualanganmu</h2>
+        <p class="lead">
+          Travelin siap menemani perjalananmu ke mana pun kamu mau. Coba
+          sekarang!
+        </p>
+      </section>
+    </main>
+
+    <footer class="bg-light py-3 text-center">
+      <div class="container">&copy; 2025 Travelin - All rights reserved</div>
+    </footer>
+    <script>
+      function logout() {
+        localStorage.removeItem("isLoggedIn");
+        window.location.href = "login.html";
+      }
+
+      // Animasi loading saat klik "Cari Tiket Sekarang"
+      document.addEventListener("DOMContentLoaded", function () {
+        const btnCari = document.getElementById("btnCariTiket");
+        const loadingOverlay = document.getElementById("loadingOverlay");
+        if (btnCari) {
+          btnCari.addEventListener("click", function (e) {
+            e.preventDefault();
+            loadingOverlay.style.display = "flex";
+            setTimeout(function () {
+              window.location.href = "meki.html";
+            }, 1000); // 1 detik loading
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

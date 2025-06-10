@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cari Tiket - Travelin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+    }
+    .hover-shadow:hover {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      transform: translateY(-5px);
+      transition: all 0.3s ease;
+    }
+    .menu {
+      background-image: url("trr.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 60vh;
+      padding: 100px 0;
+      color: white;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+      text-align: center;
+    }
+    .confirmation {
+      background-color: #f8f9fa;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .confirmation h5 {
+      color: #28a745;
+      margin-bottom: 20px;
+    }
+    .penumpang-form {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    /* Loader overlay */
+    #loadingOverlay {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.7);
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div id="loadingOverlay">
+    <div class="spinner-border text-primary" style="width:4rem;height:4rem;" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+    
+  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container">
+      <img src="tike.png" alt="Logo KAI" width="40" height="40" class="me-2" />
+      <a class="navbar-brand" href="#">Travelin</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Beranda</a></li>
+          <li class="nav-item"><a class="nav-link active" href="meki.html">Cari Tiket</a></li>
+          <li class="nav-item"><a class="nav-link active" href="pesan.html">Pesanan Saya</a></li>
+          <li class="nav-item">
+            <button class="btn btn-outline-danger ms-3" onclick="logout()">Logout</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <section class="menu">
+    <div class="container">
+      <h1>Cari Tiket Kereta Api</h1>
+      <p class="lead">Temukan tiket terbaik untuk perjalananmu</p>
+    </div>
+  </section>
+
+  <main class="container my-5">
+    <form id="searchForm" class="row g-4 shadow-sm p-4 rounded-3 bg-light">
+      <div class="col-md-3">
+        <label for="asal" class="form-label fw-semibold">Kota Asal</label>
+        <select id="asal" class="form-select" required>
+          <option value="" disabled selected>Pilih Kota Asal</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label for="tujuan" class="form-label fw-semibold">Kota Tujuan</label>
+        <select id="tujuan" class="form-select" required>
+          <option value="" disabled selected>Pilih Kota Tujuan</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label for="tanggalBerangkat" class="form-label fw-semibold">Tanggal Berangkat</label>
+        <input type="date" id="tanggalBerangkat" class="form-control" required />
+      </div>
+
+      <div class="col-md-2">
+        <label for="jumlahPenumpang" class="form-label fw-semibold">Jumlah Penumpang</label>
+        <input
+          type="number"
+          id="jumlahPenumpang"
+          class="form-control"
+          value="1"
+          min="1"
+          max="10"
+          required
+        />
+      </div>
+
+      <div class="col-12 d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary px-5">Cari Tiket</button>
+      </div>
+    </form>
+
+    <hr />
+
+    <section id="hasilCari" class="row g-4 mt-3">
+      <!-- Hasil pencarian muncul di sini -->
+    </section>
+  </main>
+
+  <footer class="bg-light py-3 text-center">
+    <div class="container">&copy; 2025 Travelin - All rights reserved</div>
+  </footer>
+
+  <!-- Modal Pesan Tiket -->
+  <div class="modal fade" id="modalPesan" tabindex="-1" aria-labelledby="modalPesanLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form id="formPesan" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalPesanLabel">Pesan Tiket</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="hiddenTiketIndex" />
+          
+          <div class="mb-4">
+            <h6>Informasi Tiket</h6>
+            <div id="infoTiketSelected" class="alert alert-info"></div>
+          </div>
+          
+          <div class="mb-4">
+            <h6>Data Pemesan</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="namaPemesan" class="form-label">Nama Pemesan*</label>
+                <input type="text" class="form-control" id="namaPemesan" required />
+              </div>
+              <div class="col-md-6">
+                <label for="emailPemesan" class="form-label">Email*</label>
+                <input type="email" class="form-control" id="emailPemesan" required />
+              </div>
+              <div class="col-md-6">
+                <label for="noHpPemesan" class="form-label">No. HP*</label>
+                <input type="tel" class="form-control" id="noHpPemesan" required pattern="[0-9]{10,15}" />
+                <div class="form-text">Contoh: 081234567890</div>
+              </div>
+              <div class="col-md-6">
+                <label for="catatan" class="form-label">Catatan (Opsional)</label>
+                <input type="text" class="form-control" id="catatan" />
+              </div>
+            </div>
+          </div>
+          
+          <div id="formDataPenumpang">
+            <h6>Data Penumpang</h6>
+            <p class="text-muted">Silakan isi data penumpang sesuai dengan jumlah tiket yang dipesan</p>
+            <!-- Form penumpang akan ditambahkan secara dinamis disini -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Konfirmasi Pesan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Cek login status
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+
+    const kotaKAI = [
+      "Jakarta", "Bandung", "Surabaya", "Yogyakarta", "Semarang", "Solo", "Malang",
+      "Cirebon", "Purwokerto", "Tegal", "Madiun", "Blitar", "Jember", "Banyuwangi",
+      "Probolinggo", "Pasuruan", "Kertosono", "Kediri", "Tulungagung", "Sidoarjo",
+      "Mojokerto", "Bojonegoro", "Cepu", "Garut", "Tasikmalaya", "Banjar", "Cilacap",
+      "Wonogiri", "Wonosobo", "Klaten", "Salatiga", "Kutoarjo", "Jombang", "Lamongan",
+      "Bekasi", "Karawang", "Cikampek", "Serang", "Rangkasbitung", "Merak", "Palembang",
+      "Lampung", "Medan", "Padang", "Pekanbaru", "Makassar", "Balikpapan", "Samarinda",
+      "Banjarmasin", "Pontianak", "Manado",
+    ];
+
+    const asalSelect = document.getElementById("asal");
+    const tujuanSelect = document.getElementById("tujuan");
+
+    // Isi dropdown kota asal dan tujuan
+    kotaKAI.forEach(kota => {
+      asalSelect.add(new Option(kota, kota));
+      tujuanSelect.add(new Option(kota, kota));
+    });
+
+    // Set tanggal minimal hari ini
+    const tanggalInput = document.getElementById("tanggalBerangkat");
+    const today = new Date().toISOString().split("T")[0];
+    tanggalInput.min = today;
+
+    // Data tiket kereta
+    const dataTiket = [
+      { nama: "Argo Bromo Anggrek", asal: "Jakarta", tujuan: "Surabaya", jamBerangkat: "06:00", jamTiba: "14:00", harga: 350000, kelas: "Eksekutif" },
+      { nama: "Gajayana", asal: "Malang", tujuan: "Jakarta", jamBerangkat: "17:00", jamTiba: "05:00", harga: 420000, kelas: "Eksekutif" },
+      { nama: "Tawang Jaya", asal: "Semarang", tujuan: "Jakarta", jamBerangkat: "21:00", jamTiba: "05:00", harga: 200000, kelas: "Ekonomi" },
+      { nama: "Lodaya", asal: "Bandung", tujuan: "Solo", jamBerangkat: "08:00", jamTiba: "16:00", harga: 280000, kelas: "Bisnis" },
+      { nama: "Sri Tanjung", asal: "Yogyakarta", tujuan: "Banyuwangi", jamBerangkat: "07:00", jamTiba: "21:00", harga: 150000, kelas: "Ekonomi" },
+      { nama: "Mutiara Selatan", asal: "Surabaya", tujuan: "Bandung", jamBerangkat: "19:00", jamTiba: "07:00", harga: 330000, kelas: "Bisnis" },
+      { nama: "Logawa", asal: "Jember", tujuan: "Banyuwangi", jamBerangkat: "10:00", jamTiba: "12:30", harga: 50000, kelas: "Ekonomi" },
+      { nama: "Logawa", asal: "Banyuwangi", tujuan: "Jember", jamBerangkat: "14:00", jamTiba: "16:30", harga: 50000, kelas: "Ekonomi" },
+      { nama: "Tawang Alun", asal: "Jember", tujuan: "Surabaya", jamBerangkat: "06:00", jamTiba: "12:00", harga: 90000, kelas: "Bisnis" },
+      { nama: "Tawang Alun", asal: "Surabaya", tujuan: "Jember", jamBerangkat: "15:00", jamTiba: "21:00", harga: 90000, kelas: "Bisnis" },
+      { nama: "Pasundan", asal: "Bandung", tujuan: "Jakarta", jamBerangkat: "08:00", jamTiba: "12:00", harga: 120000, kelas: "Eksekutif" },
+      { nama: "Sancaka", asal: "Surabaya", tujuan: "Yogyakarta", jamBerangkat: "09:00", jamTiba: "16:00", harga: 130000, kelas: "Eksekutif" },
+      { nama: "Matarmaja", asal: "Jakarta", tujuan: "Malang", jamBerangkat: "06:30", jamTiba: "18:00", harga: 400000, kelas: "Eksekutif" },
+      { nama: "Jayabaya", asal: "Jakarta", tujuan: "Malang", jamBerangkat: "20:00", jamTiba: "08:00", harga: 380000, kelas: "Bisnis" },
+      { nama: "Serayu", asal: "Purwokerto", tujuan: "Jakarta", jamBerangkat: "07:00", jamTiba: "16:00", harga: 180000, kelas: "Ekonomi" },
+      { nama: "Harina", asal: "Semarang", tujuan: "Bandung", jamBerangkat: "14:00", jamTiba: "22:00", harga: 270000, kelas: "Bisnis" },
+      { nama: "Cirebon Ekspres", asal: "Cirebon", tujuan: "Jakarta", jamBerangkat: "09:00", jamTiba: "15:00", harga: 150000, kelas: "Ekonomi" },
+      { nama: "Fajar Utama", asal: "Surabaya", tujuan: "Madiun", jamBerangkat: "12:00", jamTiba: "15:00", harga: 80000, kelas: "Ekonomi" },
+      { nama: "Brantas", asal: "Blitar", tujuan: "Malang", jamBerangkat: "06:00", jamTiba: "08:30", harga: 60000, kelas: "Ekonomi" },
+      { nama: "Wijaya Kusuma", asal: "Banyuwangi", tujuan: "Surabaya", jamBerangkat: "09:00", jamTiba: "13:00", harga: 70000, kelas: "Bisnis" },
+      { nama: "Kertajaya", asal: "Surabaya", tujuan: "Jakarta", jamBerangkat: "18:00", jamTiba: "06:00", harga: 320000, kelas: "Eksekutif" },
+      { nama: "Tawang Jaya Ekspres", asal: "Jakarta", tujuan: "Semarang", jamBerangkat: "06:00", jamTiba: "12:00", harga: 210000, kelas: "Bisnis" },
+      { nama: "Kertalaya", asal: "Jakarta", tujuan: "Purwokerto", jamBerangkat: "07:30", jamTiba: "15:30", harga: 190000, kelas: "Ekonomi" },
+      { nama: "Jaka Tingkir", asal: "Solo", tujuan: "Jakarta", jamBerangkat: "14:00", jamTiba: "22:00", harga: 250000, kelas: "Bisnis" },
+      { nama: "Cepu Ekspres", asal: "Cepu", tujuan: "Jakarta", jamBerangkat: "08:00", jamTiba: "16:00", harga: 230000, kelas: "Ekonomi" },
+      { nama: "Malabar", asal: "Bandung", tujuan: "Malang", jamBerangkat: "10:00", jamTiba: "20:00", harga: 350000, kelas: "Eksekutif" },
+      { nama: "Ciremai", asal: "Cirebon", tujuan: "Bandung", jamBerangkat: "13:00", jamTiba: "17:00", harga: 120000, kelas: "Bisnis" },
+      { nama: "Lempuyangan Ekspres", asal: "Yogyakarta", tujuan: "Jakarta", jamBerangkat: "06:00", jamTiba: "14:00", harga: 300000, kelas: "Ekonomi" },
+      { nama: "Gumarang", asal: "Surabaya", tujuan: "Jakarta", jamBerangkat: "19:00", jamTiba: "05:00", harga: 310000, kelas: "Bisnis" },
+      { nama: "Tawang Mas", asal: "Semarang", tujuan: "Surabaya", jamBerangkat: "07:00", jamTiba: "13:00", harga: 150000, kelas: "Ekonomi" },
+      { nama: "Bengawan", asal: "Solo", tujuan: "Bandung", jamBerangkat: "16:00", jamTiba: "00:00", harga: 270000, kelas: "Bisnis" },
+      { nama: "Pandalungan Executive", asal: "Jember", tujuan: "Jakarta", jamBerangkat: "19:55", jamTiba: "", harga: 750000, kelas: "Eksekutif" }
+    ];
+
+    const hasilCariSection = document.getElementById("hasilCari");
+    const searchForm = document.getElementById("searchForm");
+    const modalPesan = new bootstrap.Modal(document.getElementById('modalPesan'));
+    const formPesan = document.getElementById('formPesan');
+    const infoTiketSelected = document.getElementById('infoTiketSelected');
+    const formDataPenumpang = document.getElementById('formDataPenumpang');
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    
+    let currentBookingData = null;
+
+    // Fungsi untuk menampilkan hasil pencarian
+    searchForm.addEventListener("submit", e => {
+      e.preventDefault();
+
+      // Tampilkan loading
+      loadingOverlay.style.display = "flex";
+
+      setTimeout(() => {
+        const asal = asalSelect.value;
+        const tujuan = tujuanSelect.value;
+        const tanggal = tanggalInput.value;
+        const jumlahPenumpang = parseInt(document.getElementById("jumlahPenumpang").value);
+
+        hasilCariSection.innerHTML = "";
+
+        if (asal === tujuan) {
+          loadingOverlay.style.display = "none";
+          alert("Kota asal dan tujuan tidak boleh sama!");
+          return;
+        }
+
+        // Filter tiket berdasarkan input
+        const hasil = dataTiket.filter(
+          tiket => tiket.asal === asal && tiket.tujuan === tujuan
+        );
+
+        loadingOverlay.style.display = "none";
+
+        if (hasil.length === 0) {
+          hasilCariSection.innerHTML = `
+            <div class="col-12">
+              <div class="alert alert-warning text-center">
+                Tidak ditemukan tiket untuk rute tersebut.
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // Tampilkan hasil
+        hasil.forEach((tiket, index) => {
+          const totalHarga = tiket.harga * jumlahPenumpang;
+          const card = document.createElement("div");
+          card.className = "col-md-6";
+          card.innerHTML = `
+            <div class="card hover-shadow">
+              <div class="card-body">
+                <h5 class="card-title">${tiket.nama} (${tiket.kelas})</h5>
+                <p class="card-text">
+                  <strong>${tiket.asal}</strong> (${tiket.jamBerangkat}) → 
+                  <strong>${tiket.tujuan}</strong> (${tiket.jamTiba})<br>
+                  Harga per penumpang: Rp ${tiket.harga.toLocaleString()}<br>
+                  Total: Rp ${totalHarga.toLocaleString()}
+                </p>
+                <button class="btn btn-success" onclick='showPesanModal(${dataTiket.indexOf(tiket)}, ${jumlahPenumpang}, "${tanggal}")'>
+                  Pesan Tiket
+                </button>
+              </div>
+            </div>
+          `;
+          hasilCariSection.appendChild(card);
+        });
+      }, 700); // simulasi loading 700ms
+    });
+
+    // Fungsi untuk menampilkan modal pesan tiket
+    function showPesanModal(index, jumlahPenumpang, tanggal) {
+      const tiket = dataTiket[index];
+      currentBookingData = {
+        ...tiket,
+        jumlahPenumpang,
+        tanggal,
+        penumpang: []
+      };
+      
+      // Tampilkan info tiket di modal
+      const totalHarga = tiket.harga * jumlahPenumpang;
+      infoTiketSelected.innerHTML = `
+        <div class="row">
+          <div class="col-md-6">
+            <strong>${tiket.nama} (${tiket.kelas})</strong><br>
+            <strong>${tiket.asal}</strong> (${tiket.jamBerangkat}) → 
+            <strong>${tiket.tujuan}</strong> (${tiket.jamTiba})
+          </div>
+          <div class="col-md-6">
+            <strong>Tanggal:</strong> ${tanggal}<br>
+            <strong>Jumlah Penumpang:</strong> ${jumlahPenumpang}<br>
+            <strong>Total Harga:</strong> Rp ${totalHarga.toLocaleString()}
+          </div>
+        </div>
+      `;
+      
+      // Generate form data penumpang
+      formDataPenumpang.innerHTML = `
+        <h6>Data Penumpang</h6>
+        <p class="text-muted">Silakan isi data penumpang sesuai dengan jumlah tiket yang dipesan</p>
+      `;
+      
+      for (let i = 1; i <= jumlahPenumpang; i++) {
+        const penumpangForm = document.createElement('div');
+        penumpangForm.className = 'penumpang-form';
+        penumpangForm.innerHTML = `
+          <h6 class="fw-semibold">Penumpang ${i}</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="namaPenumpang${i}" class="form-label">Nama Lengkap*</label>
+              <input type="text" class="form-control" id="namaPenumpang${i}" required />
+            </div>
+            <div class="col-md-6">
+              <label for="noKtpPenumpang${i}" class="form-label">No. KTP/NIK*</label>
+              <input type="text" class="form-control" id="noKtpPenumpang${i}" required pattern="[0-9]{16}" />
+            </div>
+            <div class="col-md-4">
+              <label for="jenisKelamin${i}" class="form-label">Jenis Kelamin*</label>
+              <select class="form-select" id="jenisKelamin${i}" required>
+                <option value="" selected disabled>Pilih</option>
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="usia${i}" class="form-label">Usia*</label>
+              <input type="number" class="form-control" id="usia${i}" min="1" max="120" required />
+            </div>
+            <div class="col-md-4">
+              <label for="kursi${i}" class="form-label">Pilihan Kursi</label>
+              <select class="form-select" id="kursi${i}">
+                <option value="acak">Acak</option>
+                <option value="dekat-jendela">Dekat Jendela</option>
+                <option value="dekat-pintu">Dekat Pintu</option>
+              </select>
+            </div>
+          </div>
+        `;
+        formDataPenumpang.appendChild(penumpangForm);
+      }
+      
+      modalPesan.show();
+    }
+
+    // Fungsi untuk memproses pemesanan tiket
+    formPesan.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const namaPemesan = document.getElementById('namaPemesan').value;
+      const emailPemesan = document.getElementById('emailPemesan').value;
+      const noHpPemesan = document.getElementById('noHpPemesan').value;
+      const catatan = document.getElementById('catatan').value;
+      
+      if (!namaPemesan || !emailPemesan || !noHpPemesan) {
+        alert('Harap isi semua data pemesan!');
+        return;
+      }
+      
+      // Kumpulkan data penumpang
+      const penumpangData = [];
+      const jumlahPenumpang = currentBookingData.jumlahPenumpang;
+      let isValid = true;
+      
+      for (let i = 1; i <= jumlahPenumpang; i++) {
+        const nama = document.getElementById(`namaPenumpang${i}`).value;
+        const noKtp = document.getElementById(`noKtpPenumpang${i}`).value;
+        const jenisKelamin = document.getElementById(`jenisKelamin${i}`).value;
+        const usia = document.getElementById(`usia${i}`).value;
+        const kursi = document.getElementById(`kursi${i}`).value;
+        
+        if (!nama || !noKtp || !jenisKelamin || !usia) {
+          alert(`Harap lengkapi data untuk Penumpang ${i}!`);
+          isValid = false;
+          break;
+        }
+        
+        penumpangData.push({
+          nama,
+          noKtp,
+          jenisKelamin,
+          usia,
+          kursi
+        });
+      }
+      
+      if (!isValid) return;
+      
+      // Simpan semua data pemesanan
+      currentBookingData.namaPemesan = namaPemesan;
+      currentBookingData.emailPemesan = emailPemesan;
+      currentBookingData.noHpPemesan = noHpPemesan;
+      currentBookingData.catatan = catatan;
+      currentBookingData.penumpang = penumpangData;
+      currentBookingData.tanggalPemesanan = new Date().toLocaleString();
+      currentBookingData.noPemesanan = `TRV${Math.floor(100000 + Math.random() * 900000)}`;
+      
+      // Tampilkan konfirmasi pemesanan
+      showConfirmation(currentBookingData);
+      
+      // Reset form dan tutup modal
+      formPesan.reset();
+      modalPesan.hide();
+    });
+
+    // Fungsi konfirmasi pemesanan
+    function showConfirmation(bookingData) {
+      const totalHarga = bookingData.harga * bookingData.jumlahPenumpang;
+      
+      // Format data sebelum disimpan
+      const dataPesanan = {
+        noPemesanan: bookingData.noPemesanan || `TRV${Math.floor(100000 + Math.random() * 900000)}`,
+        namaKereta: bookingData.nama || 'N/A',
+        asal: bookingData.asal || 'N/A',
+        tujuan: bookingData.tujuan || 'N/A',
+        tanggal: bookingData.tanggal || new Date().toLocaleDateString(),
+        jamBerangkat: bookingData.jamBerangkat || 'N/A',
+        jamTiba: bookingData.jamTiba || 'N/A',
+        kelas: bookingData.kelas || 'N/A',
+        jumlahPenumpang: bookingData.jumlahPenumpang || 0,
+        harga: bookingData.harga || 0,
+        tanggalPemesanan: new Date().toLocaleString(),
+        namaPemesan: bookingData.namaPemesan || 'N/A',
+        status: 'Terkonfirmasi'
+      };
+
+      // Simpan ke localStorage
+      try {
+        const semuaPesanan = JSON.parse(localStorage.getItem('pesananTiket')) || [];
+        semuaPesanan.push(dataPesanan);
+        localStorage.setItem('pesananTiket', JSON.stringify(semuaPesanan));
+        
+        // Tampilkan konfirmasi
+        hasilCariSection.innerHTML = `
+          <div class="col-12">
+            <div class="confirmation text-center">
+              <h5>🎉 Pemesanan Berhasil! 🎉</h5>
+              <p>Nomor Pemesanan: <strong>${dataPesanan.noPemesanan}</strong></p>
+              <button class="btn btn-primary" onclick="window.location.href='pesan.html'">
+                Lihat Pesanan Saya
+              </button>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Gagal menyimpan pesanan:', error);
+        hasilCariSection.innerHTML = `
+          <div class="col-12">
+            <div class="alert alert-danger">
+              Gagal menyimpan data pemesanan. Silakan coba lagi.
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Fungsi untuk mencetak tiket (simulasi)
+    function printTiket(noPemesanan) {
+      alert(`Fungsi cetak tiket untuk nomor pemesanan ${noPemesanan}\nIni hanya simulasi, pada aplikasi nyata akan membuka halaman cetak.`);
+      // window.open(`cetak.html?no=${noPemesanan}`, '_blank');
+    }
+
+    // Fungsi logout
+    function logout() {
+      localStorage.setItem("isLoggedIn", "false");
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>

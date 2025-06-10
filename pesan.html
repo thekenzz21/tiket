@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pesanan Saya - Travelin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+    @media (max-width: 768px) {
+      .table-responsive {
+        font-size: 0.8rem;
+      }
+      .table-responsive td, .table-responsive th {
+        padding: 0.5rem;
+      }
+    }
+    .badge {
+      font-size: 0.85em;
+      padding: 0.35em 0.65em;
+    }
+    /* Loader overlay */
+    #loadingOverlay {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.7);
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div id="loadingOverlay">
+    <div class="spinner-border text-primary" style="width:4rem;height:4rem;" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container">
+      <img src="tike.png" alt="Logo Travelin" width="40" height="40" class="me-2" />
+      <a class="navbar-brand" href="#">Travelin</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Beranda</a></li>
+          <li class="nav-item"><a class="nav-link" href="meki.html">Cari Tiket</a></li>
+          <li class="nav-item"><a class="nav-link active" href="pesan.html">Pesanan Saya</a></li>
+          <li class="nav-item">
+            <button class="btn btn-outline-danger ms-3" onclick="logout()">Logout</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-5">
+    <h2 class="mb-4">Daftar Pesanan Tiket</h2>
+    
+    <div class="alert alert-info">
+      Berikut adalah riwayat pemesanan tiket kereta Anda.
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>No.</th>
+            <th>Nama Kereta</th>
+            <th>Rute</th>
+            <th>Tanggal</th>
+            <th>Jam</th>
+            <th>Kelas</th>
+            <th>Jumlah</th>
+            <th>Total Harga</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="daftarPesanan">
+          <!-- Data akan diisi oleh JavaScript -->
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="alert alert-warning mt-4">
+      <strong>Catatan:</strong> Harap simpan bukti pemesanan ini. Tiket elektronik akan dikirim ke email Anda.
+    </div>
+  </main>
+
+  <footer class="bg-light py-3 text-center">
+    <div class="container">&copy; 2025 Travelin - All rights reserved</div>
+  </footer>
+
+  <script>
+    // Cek login
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+
+    const loadingOverlay = document.getElementById("loadingOverlay");
+
+    function showLoading() {
+      loadingOverlay.style.display = "flex";
+    }
+    function hideLoading() {
+      loadingOverlay.style.display = "none";
+    }
+
+    function loadPesanan() {
+      showLoading();
+      setTimeout(() => {
+        try {
+          const pesanan = JSON.parse(localStorage.getItem('pesananTiket')) || [];
+          const tableBody = document.getElementById('daftarPesanan');
+          
+          tableBody.innerHTML = '';
+          
+          if (pesanan.length === 0) {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="10" class="text-center py-4">
+                  Belum ada pesanan. <a href="meki.html">Pesan tiket sekarang</a>
+                </td>
+              </tr>
+            `;
+            hideLoading();
+            return;
+          }
+
+          pesanan.forEach((item, index) => {
+            // Pastikan semua field memiliki nilai default
+            const row = document.createElement('tr');
+            const totalHarga = (item.harga || 0) * (item.jumlahPenumpang || 1);
+            
+            row.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${item.namaKereta || item.nama || 'N/A'}</td>
+              <td>${item.asal || 'N/A'} → ${item.tujuan || 'N/A'}</td>
+              <td>${item.tanggal || 'N/A'}</td>
+              <td>${item.jamBerangkat || 'N/A'} - ${item.jamTiba || 'N/A'}</td>
+              <td>${item.kelas || 'N/A'}</td>
+              <td>${item.jumlahPenumpang || 0}</td>
+              <td>Rp${totalHarga.toLocaleString('id-ID')}</td>
+              <td><span class="badge bg-success">${item.status || 'Terkonfirmasi'}</span></td>
+              <td>
+                <button class="btn btn-sm btn-outline-danger" onclick="hapusPesanan('${item.noPemesanan}')">
+                  Hapus
+                </button>
+              </td>
+            `;
+            tableBody.appendChild(row);
+          });
+          hideLoading();
+        } catch (error) {
+          console.error('Error loading orders:', error);
+          const tableBody = document.getElementById('daftarPesanan');
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="10" class="text-center text-danger py-4">
+                Gagal memuat data pesanan. Silakan refresh halaman.
+              </td>
+            </tr>
+          `;
+          hideLoading();
+        }
+      }, 500); // simulasi loading 500ms
+    }
+
+    // Fungsi untuk menghapus pesanan
+    function hapusPesanan(noPemesanan) {
+      if (confirm('Apakah Anda yakin ingin menghapus pesanan ini?')) {
+        showLoading();
+        setTimeout(() => {
+          try {
+            const pesanan = JSON.parse(localStorage.getItem('pesananTiket')) || [];
+            const baru = pesanan.filter(item => item.noPemesanan !== noPemesanan);
+            localStorage.setItem('pesananTiket', JSON.stringify(baru));
+            loadPesanan(); // Refresh tampilan
+          } catch (error) {
+            console.error('Gagal menghapus pesanan:', error);
+            alert('Gagal menghapus pesanan');
+            hideLoading();
+          }
+        }, 400); // simulasi loading 400ms
+      }
+    }
+
+    // Fungsi untuk melihat detail pesanan
+    function lihatDetail(noPemesanan) {
+      const pesanan = JSON.parse(localStorage.getItem('pesananTiket')) || [];
+      const pesananDetail = pesanan.find(item => item.noPemesanan === noPemesanan);
+      
+      if (pesananDetail) {
+        // Format data untuk ditampilkan
+        const detailText = `
+Nomor Pemesanan: ${pesananDetail.noPemesanan || 'N/A'}
+Nama Kereta: ${pesananDetail.namaKereta || pesananDetail.nama || 'N/A'}
+Rute: ${pesananDetail.asal || 'N/A'} → ${pesananDetail.tujuan || 'N/A'}
+Tanggal: ${pesananDetail.tanggal || 'N/A'}
+Jam: ${pesananDetail.jamBerangkat || 'N/A'} - ${pesananDetail.jamTiba || 'N/A'}
+Kelas: ${pesananDetail.kelas || 'N/A'}
+Jumlah Penumpang: ${pesananDetail.jumlahPenumpang || 0}
+Total Harga: Rp${(pesananDetail.harga ? Number(pesananDetail.harga) * (pesananDetail.jumlahPenumpang || 1) : 0).toLocaleString('id-ID')}
+Status: ${pesananDetail.status || 'Terkonfirmasi'}
+${pesananDetail.namaPemesan ? `\nPemesan: ${pesananDetail.namaPemesan}` : ''}
+        `;
+        alert(detailText);
+      } else {
+        alert('Detail pesanan tidak ditemukan');
+      }
+    }
+
+    // Fungsi logout
+    function logout() {
+      localStorage.removeItem("isLoggedIn");
+      window.location.href = "login.html";
+    }
+
+    // Panggil fungsi saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', loadPesanan);
+  </script>
+</body>
+</html>
